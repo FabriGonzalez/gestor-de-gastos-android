@@ -1,0 +1,11 @@
+<resources>
+    <!-- Tema principal -->
+    <style name="Theme.GestorDeGastos" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Tema para splash en Android 12+ -->
+    <style name="Theme.GestorDeGastos.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/icon_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.GestorDeGastos</item>
+    </style>
+</resources>
