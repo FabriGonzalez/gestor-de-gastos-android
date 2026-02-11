@@ -814,8 +814,6 @@ fun AgregarGastoDialog(
         }
     }
 
-
-
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
@@ -888,7 +886,6 @@ fun AgregarGastoDialog(
                         unfocusedTextColor = cs.onSurface
                     )
                 )
-
 
                 Spacer(Modifier.height(24.dp))
 
@@ -1073,7 +1070,6 @@ fun AgregarGastoDialog(
                         )
                     }
                 }
-
 
                 Spacer(Modifier.height(16.dp))
 
@@ -1369,27 +1365,28 @@ fun EditarGastoDialog(
 
                 if (personas.size == 2) {
                     Spacer(Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = porcentaje == 0.5,
-                                onClick = { porcentaje = 0.5 }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                        FilterChip(
+                            selected = porcentaje == 0.5,
+                            onClick = { porcentaje = 0.5 },
+                            label = { Text("Compartido") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = cs.primary,
+                                selectedLabelColor = cs.onPrimary
                             )
-                            Text(
-                                "Gasto compartido",
-                                maxLines = 1
+                        )
+
+                        FilterChip(
+                            selected = porcentaje == 1.0,
+                            onClick = { porcentaje = 1.0 },
+                            label = { Text("Préstamo") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = cs.primary,
+                                selectedLabelColor = cs.onPrimary
                             )
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = porcentaje == 1.0,
-                                onClick = { porcentaje = 1.0 }
-                            )
-                            Text(
-                                "Prestamo",
-                                maxLines = 1
-                            )
-                        }
+                        )
                     }
                 }
 
