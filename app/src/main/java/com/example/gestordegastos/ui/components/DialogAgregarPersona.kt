@@ -23,9 +23,9 @@ fun DialogAgregarPersona(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = cs.surface,
-        titleContentColor = cs.onSurface,
-        textContentColor = cs.onSurfaceVariant,
+        containerColor = cs.background,
+        titleContentColor = cs.onBackground,
+        textContentColor = cs.onBackground,
         title = { Text("Agregar persona") },
         text = {
             OutlinedTextField(

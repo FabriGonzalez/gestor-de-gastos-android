@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc13")
     implementation("androidx.compose.material:material-icons-extended")
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")

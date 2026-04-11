@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import com.example.gestordegastos.domain.model.Gasto
+import com.example.gestordegastos.ui.components.DividerConPunto
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -179,6 +180,8 @@ fun MainScreen(
             ) {
 
                 Spacer(Modifier.height(16.dp))
+                DividerConPunto()
+                Spacer(Modifier.height(16.dp))
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -195,7 +198,6 @@ fun MainScreen(
                     ) {
 
                         Column {
-
                             Text(
                                 "Total del grupo",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -213,9 +215,6 @@ fun MainScreen(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                DividerConPunto()
-                Spacer(Modifier.height(16.dp))
-
                 if (gastos.isEmpty()) {
 
                     Box(
@@ -347,8 +346,11 @@ fun MainScreen(
         AnimatedVisibility(
             visible = showPagoAnimacion,
             enter = fadeIn(tween(500)) + scaleIn(tween(500)),
-            exit = fadeOut(tween(500)) + scaleOut(tween(500))
-        ) {
+            exit = fadeOut(tween(500)) + scaleOut(tween(500)),
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.Center)
+        ){
 
             Icon(
                 imageVector = Icons.Filled.CheckCircle,
@@ -459,14 +461,16 @@ fun GastoItem(
             .animateContentSize()
             .clickable { expanded = !expanded },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = gasto.categoria.color.copy(alpha = 0.08f)
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     modifier = Modifier.size(48.dp),
                     shape = RoundedCornerShape(14.dp),
-                    color = gasto.categoria.color.copy(alpha = 0.1f)
+                    color = gasto.categoria.color.copy(alpha = 0.2f)
                 ) {
                     Icon(
                         imageVector = gasto.categoria.icono,
@@ -711,11 +715,13 @@ fun AgregarGastoDialog(
                             modifier = Modifier.clickable { categoria = cat }
                         ) {
                             Surface(
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(14.dp),
                                 color = cat.color.copy(
-                                    alpha = if (categoria == cat) 0.35f else 0.18f
+                                    alpha = if (categoria == cat) 0.35f else 0.1f
                                 ),
-                                shadowElevation = if (categoria == cat) 6.dp else 0.dp,
+                                border = if (categoria == cat)
+                                    BorderStroke(2.dp, cat.color)
+                                else null,
                                 modifier = Modifier.size(56.dp)
                             ) {
                                 Icon(
@@ -729,11 +735,12 @@ fun AgregarGastoDialog(
                             Spacer(Modifier.height(6.dp))
 
                             Text(
-                                text = cat.name
-                                    .lowercase()
-                                    .replaceFirstChar { it.uppercase() },
+                                text = cat.name.lowercase().replaceFirstChar { it.uppercase() },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = cs.onSurface
+                                color = if (categoria == cat)
+                                    cat.color
+                                else
+                                    MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1231,38 +1238,6 @@ fun EditarGastoDialog(
     }
 }
 
-@Composable
-fun DividerConPunto(
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-        )
-
-
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .size(4.dp)
-                .background(
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                    CircleShape
-                )
-        )
-
-        HorizontalDivider(
-            modifier = Modifier.weight(1f),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-        )
-    }
-}
 
 private fun obtenerNombre(
     personas: List<Persona>,

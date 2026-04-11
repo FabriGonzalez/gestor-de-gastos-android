@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -21,15 +22,25 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.FormatUnderlined
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.gestordegastos.domain.model.Nota
 import com.example.gestordegastos.ui.components.AppTopBar
+import com.example.gestordegastos.ui.components.DividerConPunto
 import com.example.gestordegastos.utils.formatearFechaRelativa
 import com.example.gestordegastos.viewmodel.NotaViewModel
 import com.example.gestordegastos.viewmodel.NotasUiEvent
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.ui.material3.RichText
+import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,17 +110,28 @@ fun NotasScreen(
                         showDialogAgregarNota = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    shape = CircleShape
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar nota")
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Agregar nota",
+                        tint = MaterialTheme.colorScheme.background
+                    )
                 }
             }
         ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Spacer(Modifier.height(16.dp))
+            DividerConPunto()
+            Spacer(Modifier.height(16.dp))
             if (notas.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -129,9 +151,7 @@ fun NotasScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -151,6 +171,7 @@ fun NotasScreen(
                 }
             }
         }
+    }
 
         if (showDialogAgregarNota) {
             DialogAgregarEditarNota(
@@ -252,37 +273,48 @@ fun NotaItem(
                         fontSize = 20.sp
                     )
                 }
+                Text(
+                    text = formatearFechaRelativa(nota.fechaCreacion),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = formatearFechaRelativa(nota.fechaCreacion),
-                style = MaterialTheme.typography.labelMedium,
-                color =  MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 14.sp
-            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = nota.contenido,
+            val richTextState = rememberRichTextState()
+
+            LaunchedEffect(nota.contenido) {
+                richTextState.config.unorderedListIndent = 8
+                richTextState.config.orderedListIndent = 8
+                richTextState.setHtml(nota.contenido)
+            }
+
+            RichText(
+                state = richTextState,
                 style = MaterialTheme.typography.bodyLarge,
-                color =  MaterialTheme.colorScheme.onSurface,
-                lineHeight = 24.sp
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogAgregarEditarNota(
     nota: Nota?,
     onDismiss: () -> Unit,
     onGuardar: (String, String) -> Unit
 ) {
+    val richTextState = rememberRichTextState()
     var titulo by remember { mutableStateOf(nota?.titulo ?: "") }
-    var contenido by remember { mutableStateOf(nota?.contenido ?: "") }
+
+    LaunchedEffect(nota) {
+        richTextState.config.unorderedListIndent = 8
+        richTextState.config.orderedListIndent = 8
+        richTextState.setHtml(nota?.contenido ?: "")
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -290,15 +322,16 @@ fun DialogAgregarEditarNota(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth(0.95f)
                 .clip(RoundedCornerShape(16.dp)),
             color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -332,48 +365,126 @@ fun DialogAgregarEditarNota(
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Next
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
 
-                OutlinedTextField(
-                    value = contenido,
-                    onValueChange = { contenido = it },
-                    label = { Text("Contenido") },
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 120.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                        imeAction = ImeAction.Default
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        .heightIn(min = 150.dp, max = 250.dp)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline,
+                            RoundedCornerShape(8.dp)
+                        )
+                ) {
+                    RichTextEditor(
+                        state = richTextState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 48.dp)
+                            .padding(8.dp),
+                        colors = RichTextEditorDefaults.richTextEditorColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                        )
                     )
-                )
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                        tonalElevation = 4.dp,
+                        shadowElevation = 4.dp,
+                        shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = {
+                                richTextState.toggleSpanStyle(
+                                    androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold)
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Default.FormatBold,
+                                    contentDescription = "Negrita",
+                                    tint = if (richTextState.currentSpanStyle.fontWeight == FontWeight.Bold)
+                                        MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            IconButton(onClick = {
+                                richTextState.toggleSpanStyle(
+                                    androidx.compose.ui.text.SpanStyle(
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                    )
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Default.FormatItalic,
+                                    contentDescription = "Cursiva",
+                                    tint = if (richTextState.currentSpanStyle.fontStyle == androidx.compose.ui.text.font.FontStyle.Italic)
+                                        MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            IconButton(onClick = {
+                                richTextState.toggleSpanStyle(
+                                    androidx.compose.ui.text.SpanStyle(
+                                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                                    )
+                                )
+                            }) {
+                                Icon(
+                                    Icons.Default.FormatUnderlined,
+                                    contentDescription = "Subrayado",
+                                    tint = if (richTextState.currentSpanStyle.textDecoration?.contains(
+                                            androidx.compose.ui.text.style.TextDecoration.Underline) == true)
+                                        MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Divider(
+                                modifier = Modifier.height(24.dp).width(1.dp),
+                                color = MaterialTheme.colorScheme.outline
+                            )
+
+                            IconButton(onClick = { richTextState.toggleUnorderedList() }) {
+                                Icon(
+                                    Icons.Default.FormatListBulleted,
+                                    contentDescription = "Lista",
+                                    tint = if (richTextState.isUnorderedList)
+                                        MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 4.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(
-                        onClick = onDismiss
-                    ) {
+                    TextButton(onClick = onDismiss) {
                         Text("Cancelar")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
-                        onClick = {
-                            onGuardar(titulo, contenido)
-                        },
-                        enabled = titulo.isNotBlank() && contenido.isNotBlank()
+                        onClick = { onGuardar(titulo, richTextState.toHtml()) },
+                        enabled = titulo.isNotBlank()
                     ) {
                         Text("Guardar")
                     }
@@ -382,4 +493,6 @@ fun DialogAgregarEditarNota(
         }
     }
 }
+
+
 

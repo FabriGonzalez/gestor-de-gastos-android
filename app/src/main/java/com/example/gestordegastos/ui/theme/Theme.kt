@@ -2,7 +2,6 @@ package com.example.gestordegastos.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
@@ -30,38 +29,13 @@ private val DarkColorScheme = darkColorScheme(
     outline = OutlineDark
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-
-    secondary = Secondary,
-    onSecondary = OnSecondary,
-
-    tertiary = Tertiary,
-    onTertiary = OnTertiary,
-
-    error = Error,
-    onError = OnError,
-
-    background = BackgroundLight,
-    onBackground = OnBackgroundLight,
-
-    surface = SurfaceLight,
-    onSurface = OnSurfaceLight,
-
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-
-    outline = OutlineLight
-)
 
 @Composable
 fun GestorDeGastosTheme(
-    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        colorScheme = DarkColorScheme,
         typography = Typography,
         content = content
     )

@@ -1,5 +1,6 @@
 package com.example.gestordegastos.ui.screens
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,7 +21,9 @@ import com.example.gestordegastos.viewmodel.GastoViewModel
 import com.example.gestordegastos.viewmodel.NotaViewModel
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.unit.dp
 import com.example.gestordegastos.ui.components.DialogAgregarPersona
+import com.example.gestordegastos.ui.components.DividerConPunto
 import com.example.gestordegastos.ui.components.PersonasSheet
 
 enum class PantallaNavegacion {
@@ -41,19 +45,41 @@ fun ContenedorPrincipal(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Gastos") },
-                    label = { Text("Gastos") },
-                    selected = pantallaActual == PantallaNavegacion.GASTOS,
-                    onClick = { pantallaActual = PantallaNavegacion.GASTOS }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Note, contentDescription = "Notas") },
-                    label = { Text("Notas") },
-                    selected = pantallaActual == PantallaNavegacion.NOTAS,
-                    onClick = { pantallaActual = PantallaNavegacion.NOTAS }
-                )
+            Column {
+                DividerConPunto()
+
+
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Gastos") },
+                        label = { Text("Gastos") },
+                        selected = pantallaActual == PantallaNavegacion.GASTOS,
+                        onClick = { pantallaActual = PantallaNavegacion.GASTOS },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Note, contentDescription = "Notas") },
+                        label = { Text("Notas") },
+                        selected = pantallaActual == PantallaNavegacion.NOTAS,
+                        onClick = { pantallaActual = PantallaNavegacion.NOTAS },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -90,9 +116,11 @@ fun ContenedorPrincipal(
         val personas by gastoViewModel.personas.collectAsState()
 
         ModalBottomSheet(
-            onDismissRequest = { showPersonaSheet = false }
+            onDismissRequest = { showPersonaSheet = false },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 0.dp,
+            scrimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
         ) {
-
             PersonasSheet(
                 viewModel = gastoViewModel,
                 personas = personas,
@@ -115,6 +143,10 @@ fun ContenedorPrincipal(
     if (showSalirGrupoDialog) {
         AlertDialog(
             onDismissRequest = { showSalirGrupoDialog = false },
+            containerColor = MaterialTheme.colorScheme.background,
+            tonalElevation = 0.dp,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            textContentColor = MaterialTheme.colorScheme.onBackground,
             title = { Text("Salir del grupo") },
             text = { Text("¿Estás seguro de que querés salir del grupo?") },
             confirmButton = {

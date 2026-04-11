@@ -50,7 +50,7 @@ fun AppTopBar(
                     Text(
                         "● $it integrantes",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -101,9 +101,9 @@ fun AppTopBar(
 
                 DropdownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    onDismissRequest = { showMenu = false },
+                    containerColor = MaterialTheme.colorScheme.background
                 ) {
-
                     onVerPersonas?.let {
                         DropdownMenuItem(
                             text = { Text("Ver personas") },

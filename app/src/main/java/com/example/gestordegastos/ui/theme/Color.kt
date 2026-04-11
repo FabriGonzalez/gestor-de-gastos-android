@@ -2,39 +2,35 @@ package com.example.gestordegastos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Primary = Color(0xFF4ADE80)
-val OnPrimary = Color(0xFF00332D)
+// Acentos principales
+val Primary = Color(0xFFC89B6D)      // arena suave
+val OnPrimary = Color(0xFF3B2A18)
 
-val Secondary = Color(0xFF60A5FA)
-val OnSecondary = Color(0xFF002244)
+val Secondary = Color(0xFFA8B79A)    // verde oliva claro
+val OnSecondary = Color(0xFF2C3523)
 
-val Tertiary = Color(0xFFFACC15)
-val OnTertiary = Color(0xFF3A2F00)
+val Tertiary = Color(0xFFD08C73)     // terracota suave
+val OnTertiary = Color(0xFF3E1F15)
 
-val Error = Color(0xFFEF4444)
+// Error
+val Error = Color(0xFFC65A5A)
 val OnError = Color.White
 
-val BackgroundDark = Color(0xFF0F172A)
-val OnBackgroundDark = Color.White
 
-val SurfaceDark = Color(0xFF1E293B)
-val OnSurfaceDark = Color.White
+// ---------- LIGHT THEME (principal de la app) ----------
 
-val SurfaceVariantDark = Color(0xFF1E293B).copy(alpha = 0.7f)
-val OnSurfaceVariantDark = Color(0xFF94A3B8)
+val BackgroundDark = Color(0xFFF7F3EE)      // crema claro
+val OnBackgroundDark = Color(0xFF3A2F27)
 
-val OutlineDark = Color(0xFF3F3F46)
+val SurfaceDark = Color(0xFFFFFBF7)         // tarjetas
+val OnSurfaceDark = Color(0xFF3A2F27)
 
-val BackgroundLight = Color(0xFFF9FAFB)
-val OnBackgroundLight = Color(0xFF111827)
+val SurfaceVariantDark = Color(0xFFF0E8DE)  // variaciones suaves
+val OnSurfaceVariantDark = Color(0xFF6B5F55)
 
-val SurfaceLight = Color.White
-val OnSurfaceLight = Color(0xFF111827)
+val OutlineDark = Color(0xFFE0D6CA)
 
-val SurfaceVariantLight = Color(0xFFF1F5F9)
-val OnSurfaceVariantLight = Color(0xFF475569)
+// Estados
 
-val OutlineLight = Color(0xFFCBD5E1)
-
-val Success = Color(0xFF22C55E)
-val Warning = Color(0xFFF97316)
+val Success = Color(0xFF6FAF7B)
+val Warning = Color(0xFFE0A35A)
