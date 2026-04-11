@@ -1,4 +1,3 @@
-// Kotlin
 package com.example.gestordegastos.data.repository
 
 import Grupo

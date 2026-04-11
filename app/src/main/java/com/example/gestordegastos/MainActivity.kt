@@ -9,16 +9,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.gestordegastos.data.datastore.GroupPreferences
 import com.example.gestordegastos.data.repository.GastoRepositoryFirestore
 import com.example.gestordegastos.data.repository.PersonaRepositoryFirestore
-import com.example.gestordegastos.ui.screens.MainScreen
 import com.example.gestordegastos.ui.screens.StartScreen
 import com.example.gestordegastos.ui.theme.GestorDeGastosTheme
 import com.example.gestordegastos.viewmodel.GastoViewModel
 import com.example.gestordegastos.viewmodel.StartViewModel
 import GastoViewModelFactory
+import NotaViewModelFactory
 import com.example.gestordegastos.data.repository.GrupoRepositoryFirestore
 import com.example.gestordegastos.viewmodel.StartViewModelFactory
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.example.gestordegastos.data.repository.NotaRepositoryFirestore
+import com.example.gestordegastos.ui.screens.ContenedorPrincipal
+import com.example.gestordegastos.viewmodel.NotaViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -69,6 +72,7 @@ class MainActivity : ComponentActivity() {
                     else -> {
                         val gastoRepository = remember { GastoRepositoryFirestore() }
                         val personaRepository = remember { PersonaRepositoryFirestore() }
+                        val notaRepository = remember { NotaRepositoryFirestore() }
 
                         val grupoId = grupo!!.codigoGrupo
 
@@ -87,14 +91,22 @@ class MainActivity : ComponentActivity() {
                             )
                         )
 
-                        MainScreen(
-                            viewModel = gastoViewModel,
+                        val notaViewModel: NotaViewModel = viewModel(
+                            viewModelStoreOwner = owner,
+                            factory = NotaViewModelFactory(
+                                grupo = grupo!!,
+                                notaRepository = notaRepository
+                            )
+                        )
+
+                        ContenedorPrincipal(
+                            gastoViewModel = gastoViewModel,
+                            notaViewModel = notaViewModel,
                             onSalirDelGrupo = {
                                 startViewModel.salirDelGrupo()
                             }
                         )
                     }
-
                 }
             }
         }

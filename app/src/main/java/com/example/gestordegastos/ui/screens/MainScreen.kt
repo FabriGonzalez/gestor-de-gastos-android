@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,11 +35,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.LaunchedEffect
@@ -51,9 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import java.util.Locale
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -61,10 +55,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.window.Dialog
-import com.example.gestordegastos.R
 import com.example.gestordegastos.domain.model.Categoria
 import com.example.gestordegastos.domain.model.Persona
-import com.example.gestordegastos.ui.components.DialogAgregarPersona
+import com.example.gestordegastos.ui.components.AppTopBar
 import com.example.gestordegastos.utils.formatearFechaRelativa
 import com.example.gestordegastos.utils.formatCentavos
 import com.example.gestordegastos.utils.parseMonedaToCentavos
@@ -75,29 +68,28 @@ import kotlin.math.absoluteValue
 @Composable
 fun MainScreen(
     viewModel: GastoViewModel,
-    onSalirDelGrupo: () -> Unit
+    onSalirDelGrupo: () -> Unit,
+    onVerPersonas: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val gastos by viewModel.gastos.collectAsState()
     val personas by viewModel.personas.collectAsState()
-    var showDialogAgregarGasto by remember{ mutableStateOf(false) }
+    val transferencias by viewModel.transferencias.collectAsState()
+    val uiEvent by viewModel.uiEvent.collectAsState()
+
+    var showAgregarPersonaDialog by remember { mutableStateOf(false) }
+    var showDialogAgregarGasto by remember { mutableStateOf(false) }
     var gastoAPagar by remember { mutableStateOf<Gasto?>(null) }
     var gastoAEliminar by remember { mutableStateOf<Gasto?>(null) }
     var showDialogPagarTodo by remember { mutableStateOf(false) }
-    val transferencias by viewModel.transferencias.collectAsState()
-    var showPagoAnimacion by remember {mutableStateOf(false)}
     var showDetalleDeudas by remember { mutableStateOf(false) }
-    var showMenu by remember {mutableStateOf(false)}
-    var showPersonaSheet by remember{mutableStateOf(false)}
-    var showAgregarPersonaDialog by remember{mutableStateOf(false)}
-    var showSalirGrupoDialog by remember { mutableStateOf(false) }
-    val uiEvent by viewModel.uiEvent.collectAsState()
+    var showPagoAnimacion by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiEvent) {
         when (uiEvent) {
             is UiEvent.Error -> {
-                showPersonaSheet = false
                 snackbarHostState.showSnackbar(
                     message = (uiEvent as UiEvent.Error).message
                 )
@@ -114,13 +106,11 @@ fun MainScreen(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
 
-    Box(modifier = Modifier.fillMaxSize()){
         Scaffold(
             snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState
-                ) { data ->
+                SnackbarHost(hostState = snackbarHostState) { data ->
                     Snackbar(
                         snackbarData = data,
                         containerColor = MaterialTheme.colorScheme.error,
@@ -129,112 +119,31 @@ fun MainScreen(
                 }
             },
             containerColor = MaterialTheme.colorScheme.background,
+
             topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        titleContentColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    title = {
-                        Column {
-                            Text(
-                                "Gestor de gastos",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "● ${personas.size} integrantes",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    },
-                    actions = {
-                        val clipboardManager = LocalClipboardManager.current
-
-                        Surface(
-                            onClick = { clipboardManager.setText(AnnotatedString(viewModel.codigoGrupo)) },
-                            shape = RoundedCornerShape(24.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text = "Copiar código",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 12.dp)
-                                .size(32.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            IconButton(
-                                onClick = { showMenu = true },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.MoreHoriz,
-                                    contentDescription = "Menú",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false}
-                            ){
-                                DropdownMenuItem(
-                                    text = { Text("Ver personas")},
-                                    onClick = {
-                                        showMenu = false
-                                        showPersonaSheet = true
-                                    }
-                                )
-                                HorizontalDivider()
-                                DropdownMenuItem(
-                                    text = { Text(
-                                        "Salir del grupo",
-                                        color = MaterialTheme.colorScheme.error
-                                        )},
-                                    onClick = {
-                                        showMenu = false
-                                        showSalirGrupoDialog = true
-                                    }
-                                )
-                            }
-
-                        }
-                    }
+                AppTopBar(
+                    titulo = "Gastos",
+                    personasCount = personas.size,
+                    codigoGrupo = viewModel.codigoGrupo,
+                    onVerPersonas = onVerPersonas,
+                    onSalirGrupo = onSalirDelGrupo
                 )
             },
+
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { showDialogAgregarGasto = true },
                     containerColor = MaterialTheme.colorScheme.primary,
                     shape = CircleShape
                 ) {
-                    Icon(Icons.Default.Add, "Agregar gasto", tint = MaterialTheme.colorScheme.background)
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Agregar gasto",
+                        tint = MaterialTheme.colorScheme.background
+                    )
                 }
             },
+
             bottomBar = {
                 if (transferencias.isNotEmpty()) {
                     Button(
@@ -245,47 +154,54 @@ fun MainScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                    Text("Ver Deudas")
+                        Text("Ver Deudas")
                     }
                 } else {
-                    Text("No hay deudas pendientes",
+                    Text(
+                        "No hay deudas pendientes",
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
-                            .height(40.dp)
-                        ,
+                            .height(40.dp),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
+
         ) { padding ->
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .padding(horizontal = 16.dp)
             ) {
+
                 Spacer(Modifier.height(16.dp))
+
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
+
                     Row(
                         modifier = Modifier.padding(24.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+
                         Column {
+
                             Text(
                                 "Total del grupo",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+
                             Text(
                                 "$${formatCentavos(gastos.sumOf { it.montoCentavos }, Locale.getDefault())}",
                                 style = MaterialTheme.typography.headlineMedium,
@@ -301,14 +217,24 @@ fun MainScreen(
                 Spacer(Modifier.height(16.dp))
 
                 if (gastos.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No hay gastos cargados", color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "No hay gastos cargados",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
+
                 } else {
+
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(bottom = 100.dp)
                     ) {
+
                         items(gastos) { gasto ->
                             GastoItem(
                                 gasto = gasto,
@@ -325,23 +251,30 @@ fun MainScreen(
         }
 
         if (showDetalleDeudas) {
+
             ModalBottomSheet(
                 onDismissRequest = { showDetalleDeudas = false },
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface
             ) {
+
                 Column(Modifier.padding(16.dp)) {
-                    Text("Detalle de deudas", style = MaterialTheme.typography.titleLarge)
+
+                    Text(
+                        "Detalle de deudas",
+                        style = MaterialTheme.typography.titleLarge
+                    )
 
                     Spacer(Modifier.height(8.dp))
 
+                    transferencias.forEach { transferencia ->
 
-                    transferencias.forEach { transferenca ->
-                        val montoFormateado = formatCentavos(transferenca.montoCentavos)
+                        val montoFormateado =
+                            formatCentavos(transferencia.montoCentavos)
+
                         Text(
-                            "• ${obtenerNombre(personas, transferenca.deudorId)} le debe a " +
-                                    "${obtenerNombre(personas, transferenca.acreedorId)}: " +
-                                    "" +
+                            "• ${obtenerNombre(personas, transferencia.deudorId)} le debe a " +
+                                    "${obtenerNombre(personas, transferencia.acreedorId)}: " +
                                     "$${montoFormateado}"
                         )
                     }
@@ -365,19 +298,23 @@ fun MainScreen(
             }
         }
 
-
         if (showDialogPagarTodo) {
+
             AlertDialog(
                 onDismissRequest = { showDialogPagarTodo = false },
                 containerColor = MaterialTheme.colorScheme.surface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
                 title = {
-                    Text("Confirmar pago total", fontWeight = FontWeight.Bold)
+                    Text(
+                        "Confirmar pago total",
+                        fontWeight = FontWeight.Bold
+                    )
                 },
+
                 text = {
                     Text("¿Deseas marcar todos los gastos como pagados?")
                 },
+
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -386,12 +323,22 @@ fun MainScreen(
                             showPagoAnimacion = true
                         }
                     ) {
-                        Text("Sí, pagar", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Sí, pagar",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
+
                 dismissButton = {
-                    TextButton(onClick = { showDialogPagarTodo = false }) {
-                        Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(
+                        onClick = { showDialogPagarTodo = false }
+                    ) {
+                        Text(
+                            "Cancelar",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             )
@@ -399,226 +346,86 @@ fun MainScreen(
 
         AnimatedVisibility(
             visible = showPagoAnimacion,
-            enter = fadeIn(animationSpec = tween(500)) + scaleIn(animationSpec = tween(500)),
-            exit = fadeOut(animationSpec = tween(500)) + scaleOut(animationSpec = tween(500)),
-            modifier = Modifier
+            enter = fadeIn(tween(500)) + scaleIn(tween(500)),
+            exit = fadeOut(tween(500)) + scaleOut(tween(500))
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.splash_logo),
+
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
                 contentDescription = "Pago completo",
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(150.dp)
             )
         }
 
-        if(showPersonaSheet){
-            ModalBottomSheet(
-                onDismissRequest = {showPersonaSheet = false},
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ) {
-                var personaEditandoId by remember { mutableStateOf<String?>(null) }
-                var nombreEditando by remember { mutableStateOf("") }
+        if (showDialogAgregarGasto) {
 
-                Column(
-                    Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        "Personas del grupo",
-                        style = MaterialTheme.typography.titleLarge
-                        )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    personas.forEach { persona ->
-                        val editando = personaEditandoId == persona.id
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            if (editando) {
-                                OutlinedTextField(
-                                    value = nombreEditando,
-                                    onValueChange = { nombreEditando = it },
-                                    modifier = Modifier.weight(1f),
-                                    singleLine = true
-                                )
-                            } else {
-                                Text(
-                                    persona.nombre,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-
-                            if (editando) {
-                                IconButton(
-                                    onClick = {
-                                        viewModel.editarPersona(persona.id, nombreEditando.trim())
-                                        personaEditandoId = null
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.CheckCircle,
-                                        contentDescription = "Guardar",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = {
-                                        personaEditandoId = null
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Cancelar"
-                                    )
-                                }
-                            } else {
-                                IconButton(
-                                    onClick = {
-                                        personaEditandoId = persona.id
-                                        nombreEditando = persona.nombre
-                                    }
-                                ) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Editar")
-                                }
-
-                                IconButton(
-                                    onClick = {
-                                        viewModel.eliminarPersona(persona.id)
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.Default.Delete,
-                                        contentDescription = "Eliminar",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { showAgregarPersonaDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Agregar persona")
-                    }
-                }
-            }
-        }
-
-        if (showSalirGrupoDialog) {
-            AlertDialog(
-                onDismissRequest = { showSalirGrupoDialog = false },
-                containerColor = MaterialTheme.colorScheme.surface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                title = { Text("Salir del grupo") },
-                text = {
-                    Text(
-                        "¿Estás seguro de que querés salir del grupo?"
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onSalirDelGrupo()
-                            showSalirGrupoDialog = false
-                        }
-                    ){
-                        Text(
-                            "Salir",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showSalirGrupoDialog = false }
-                    ) {
-                        Text("Cancelar")
-                    }
-                }
-            )
-        }
-
-
-        if (showAgregarPersonaDialog) {
-            DialogAgregarPersona(
-                onDismiss = { showAgregarPersonaDialog = false },
-                onConfirm = { nombre ->
-                    viewModel.agregarPersona(nombre)
-                    showAgregarPersonaDialog = false
-                }
-            )
-        }
-
-        if(showDialogAgregarGasto){
             AgregarGastoDialog(
-                onDismiss = {showDialogAgregarGasto = false},
+                onDismiss = { showDialogAgregarGasto = false },
+
                 onGuardar = { categoria, descripcion, monto, pagante, porcentaje, deudoresIds ->
-                    viewModel.agregarGasto(categoria, descripcion, monto, pagante, porcentaje, deudoresIds)
+
+                    viewModel.agregarGasto(
+                        categoria,
+                        descripcion,
+                        monto,
+                        pagante,
+                        porcentaje,
+                        deudoresIds
+                    )
+
                     showDialogAgregarGasto = false
                 },
-                personas,
+
+                personas = personas,
                 onAgregarPersona = { showAgregarPersonaDialog = true }
             )
         }
 
         if (gastoAPagar != null) {
+
             AlertDialog(
                 onDismissRequest = { gastoAPagar = null },
-                containerColor = MaterialTheme.colorScheme.surface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = { Text("Confirmar pago") },
                 text = { Text("¿Deseas marcar este gasto como pagado?") },
+
                 confirmButton = {
-                    TextButton(onClick = {
-                        viewModel.eliminarGasto(gastoAPagar!!.firestoreId)
-                        gastoAPagar = null
-                    }) {
-                        Text("Sí")
-                    }
+                    TextButton(
+                        onClick = {
+                            viewModel.eliminarGasto(gastoAPagar!!.firestoreId)
+                            gastoAPagar = null
+                        }
+                    ) { Text("Sí") }
                 },
+
                 dismissButton = {
-                    TextButton(onClick = { gastoAPagar = null }) {
-                        Text("No")
-                    }
+                    TextButton(
+                        onClick = { gastoAPagar = null }
+                    ) { Text("No") }
                 }
             )
         }
 
-
         if (gastoAEliminar != null) {
+
             AlertDialog(
                 onDismissRequest = { gastoAEliminar = null },
-                containerColor = MaterialTheme.colorScheme.surface,
-                titleContentColor = MaterialTheme.colorScheme.onSurface,
-                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 title = { Text("Confirmar eliminación") },
                 text = { Text("¿Estás seguro que quieres eliminar el gasto?") },
+
                 confirmButton = {
-                    TextButton(onClick = {
-                        viewModel.eliminarGasto(gastoAEliminar!!.firestoreId)
-                        gastoAEliminar = null
-                    }) {
-                        Text("Sí")
-                    }
+                    TextButton(
+                        onClick = {
+                            viewModel.eliminarGasto(gastoAEliminar!!.firestoreId)
+                            gastoAEliminar = null
+                        }
+                    ) { Text("Sí") }
                 },
+
                 dismissButton = {
-                    TextButton(onClick = { gastoAEliminar = null }) {
-                        Text("No")
-                    }
+                    TextButton(
+                        onClick = { gastoAEliminar = null }
+                    ) { Text("No") }
                 }
             )
         }
