@@ -25,10 +25,12 @@ import androidx.compose.ui.unit.dp
 import com.example.gestordegastos.ui.components.DialogAgregarPersona
 import com.example.gestordegastos.ui.components.DividerConPunto
 import com.example.gestordegastos.ui.components.PersonasSheet
+import com.example.gestordegastos.viewmodel.HistorialViewModel
 
 enum class PantallaNavegacion {
     GASTOS,
-    NOTAS
+    NOTAS,
+    HISTORIAL
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,8 +38,9 @@ enum class PantallaNavegacion {
 fun ContenedorPrincipal(
     gastoViewModel: GastoViewModel,
     notaViewModel: NotaViewModel,
+    historialViewModel: HistorialViewModel,
     onSalirDelGrupo: () -> Unit
-) {
+){
     var pantallaActual by remember { mutableStateOf(PantallaNavegacion.GASTOS) }
     var showPersonaSheet by remember { mutableStateOf(false) }
     var showAgregarPersonaDialog by remember { mutableStateOf(false) }
@@ -85,11 +88,15 @@ fun ContenedorPrincipal(
     ) { paddingValues ->
 
         when (pantallaActual) {
+
             PantallaNavegacion.GASTOS -> {
                 MainScreen(
                     viewModel = gastoViewModel,
                     onSalirDelGrupo = { showSalirGrupoDialog = true },
                     onVerPersonas = { showPersonaSheet = true },
+                    onVerHistorial = {
+                        pantallaActual = PantallaNavegacion.HISTORIAL
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -98,12 +105,28 @@ fun ContenedorPrincipal(
 
             PantallaNavegacion.NOTAS -> {
                 val personas by gastoViewModel.personas.collectAsState()
+
                 NotasScreen(
                     viewModel = notaViewModel,
                     codigoGrupo = gastoViewModel.codigoGrupo,
                     personas = personas.size,
                     onVerPersonas = { showPersonaSheet = true },
                     onSalirGrupo = { showSalirGrupoDialog = true },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+
+            PantallaNavegacion.HISTORIAL -> {
+                HistorialScreen(
+                    viewModel = historialViewModel,
+                    onVolver = {
+                        pantallaActual = PantallaNavegacion.GASTOS
+                    },
+                    onVerDetalle = {
+                        // después implementamos el detalle
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)

@@ -1,9 +1,10 @@
-package com.example.gestordegastos.viewmodel
+package com.example.gestordegastos.di
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.gestordegastos.data.datastore.GroupPreferences
 import com.example.gestordegastos.data.repository.GrupoRepositoryFirestore
+import com.example.gestordegastos.viewmodel.StartViewModel
 
 class StartViewModelFactory(
     private val groupPreferences: GroupPreferences,

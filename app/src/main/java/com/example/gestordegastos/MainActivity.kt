@@ -13,14 +13,17 @@ import com.example.gestordegastos.ui.screens.StartScreen
 import com.example.gestordegastos.ui.theme.GestorDeGastosTheme
 import com.example.gestordegastos.viewmodel.GastoViewModel
 import com.example.gestordegastos.viewmodel.StartViewModel
-import GastoViewModelFactory
-import NotaViewModelFactory
+import com.example.gestordegastos.di.StartViewModelFactory
+import com.example.gestordegastos.di.HistorialViewModelFactory
+import com.example.gestordegastos.di.NotaViewModelFactory
+import com.example.gestordegastos.di.GastoViewModelFactory
 import com.example.gestordegastos.data.repository.GrupoRepositoryFirestore
-import com.example.gestordegastos.viewmodel.StartViewModelFactory
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.example.gestordegastos.data.repository.HistorialRepositoryFirestore
 import com.example.gestordegastos.data.repository.NotaRepositoryFirestore
 import com.example.gestordegastos.ui.screens.ContenedorPrincipal
+import com.example.gestordegastos.viewmodel.HistorialViewModel
 import com.example.gestordegastos.viewmodel.NotaViewModel
 
 
@@ -73,6 +76,7 @@ class MainActivity : ComponentActivity() {
                         val gastoRepository = remember { GastoRepositoryFirestore() }
                         val personaRepository = remember { PersonaRepositoryFirestore() }
                         val notaRepository = remember { NotaRepositoryFirestore() }
+                        val historialRepository = remember { HistorialRepositoryFirestore() }
 
                         val grupoId = grupo!!.codigoGrupo
 
@@ -87,7 +91,8 @@ class MainActivity : ComponentActivity() {
                             factory = GastoViewModelFactory(
                                 grupo = grupo!!,
                                 gastoRepository = gastoRepository,
-                                personaRepository = personaRepository
+                                personaRepository = personaRepository,
+                                historialRepository = historialRepository
                             )
                         )
 
@@ -99,9 +104,18 @@ class MainActivity : ComponentActivity() {
                             )
                         )
 
+                        val historialViewModel: HistorialViewModel = viewModel(
+                            viewModelStoreOwner = owner,
+                            factory = HistorialViewModelFactory(
+                                grupo = grupo!!,
+                                historialRepository = historialRepository
+                            )
+                        )
+
                         ContenedorPrincipal(
                             gastoViewModel = gastoViewModel,
                             notaViewModel = notaViewModel,
+                            historialViewModel = historialViewModel,
                             onSalirDelGrupo = {
                                 startViewModel.salirDelGrupo()
                             }

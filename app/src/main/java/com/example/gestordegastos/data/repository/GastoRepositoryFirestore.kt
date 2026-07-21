@@ -2,6 +2,7 @@ package com.example.gestordegastos.data.repository
 
 import com.example.gestordegastos.domain.model.Gasto
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
@@ -27,15 +28,24 @@ class GastoRepositoryFirestore {
             .document(grupoId)
             .collection("gastos")
 
-        val listener = ref.addSnapshotListener { snapshot, _ ->
-            val gastos = snapshot?.documents?.mapNotNull { doc ->
-                doc.toGastoCompat()
-            } ?: emptyList()
-            trySend(gastos)
-        }
+        val listener = ref
+            .orderBy("fecha", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val gastos = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toGastoCompat()
+                } ?: emptyList()
+
+                trySend(gastos)
+            }
+
         awaitClose { listener.remove() }
     }
-
     suspend fun eliminarGasto(grupoId: String, gastoId: String) {
         db.collection("grupos")
             .document(grupoId)
@@ -56,6 +66,22 @@ class GastoRepositoryFirestore {
             .set(gasto)
             .await()
     }
+
+    suspend fun eliminarTodosLosGastos(grupoId: String){
+        val batch = db.batch()
+
+        val snapshot = db.collection("grupos")
+            .document(grupoId)
+            .collection("gastos")
+            .get()
+            .await()
+
+        snapshot.documents.forEach {
+            batch.delete(it.reference)
+        }
+
+        batch.commit().await()
+    }
 }
 
 private fun DocumentSnapshot.toGastoCompat(): Gasto? {
@@ -71,3 +97,5 @@ private fun DocumentSnapshot.toGastoCompat(): Gasto? {
 
     return gasto.copy(montoCentavos = montoCentavos)
 }
+
+

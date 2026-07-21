@@ -71,6 +71,7 @@ fun MainScreen(
     viewModel: GastoViewModel,
     onSalirDelGrupo: () -> Unit,
     onVerPersonas: (() -> Unit)? = null,
+    onVerHistorial: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val gastos by viewModel.gastos.collectAsState()
@@ -127,6 +128,7 @@ fun MainScreen(
                     personasCount = personas.size,
                     codigoGrupo = viewModel.codigoGrupo,
                     onVerPersonas = onVerPersonas,
+                    onVerHistorial = onVerHistorial,
                     onSalirGrupo = onSalirDelGrupo
                 )
             },
@@ -317,7 +319,7 @@ fun MainScreen(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.pagarTodosLosGastos()
+                            viewModel.liquidarGrupo()
                             showDialogPagarTodo = false
                             showPagoAnimacion = true
                         }
@@ -361,7 +363,6 @@ fun MainScreen(
         }
 
         if (showDialogAgregarGasto) {
-
             AgregarGastoDialog(
                 onDismiss = { showDialogAgregarGasto = false },
 
@@ -385,25 +386,43 @@ fun MainScreen(
         }
 
         if (gastoAPagar != null) {
-
             AlertDialog(
                 onDismissRequest = { gastoAPagar = null },
-                title = { Text("Confirmar pago") },
-                text = { Text("¿Deseas marcar este gasto como pagado?") },
+                containerColor = MaterialTheme.colorScheme.surface,
+                title = {
+                    Text(
+                        "Confirmar pago",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    Text(
+                        "¿Deseas marcar este gasto como pagado?",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ) },
 
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.eliminarGasto(gastoAPagar!!.firestoreId)
+                            viewModel.cerrarGasto(gastoAPagar!!)
                             gastoAPagar = null
                         }
-                    ) { Text("Sí") }
+                    ) { Text(
+                            "Sí",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 },
 
                 dismissButton = {
                     TextButton(
                         onClick = { gastoAPagar = null }
-                    ) { Text("No") }
+                    ) { Text(
+                            "No",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ) }
                 }
             )
         }
@@ -412,8 +431,20 @@ fun MainScreen(
 
             AlertDialog(
                 onDismissRequest = { gastoAEliminar = null },
-                title = { Text("Confirmar eliminación") },
-                text = { Text("¿Estás seguro que quieres eliminar el gasto?") },
+                title = {
+                    Text(
+                        "Confirmar eliminación",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+
+                text = {
+                    Text(
+                        "¿Estás seguro que quieres eliminar el gasto?",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
 
                 confirmButton = {
                     TextButton(
@@ -421,13 +452,22 @@ fun MainScreen(
                             viewModel.eliminarGasto(gastoAEliminar!!.firestoreId)
                             gastoAEliminar = null
                         }
-                    ) { Text("Sí") }
+                    ) { Text(
+                            "Sí",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                    ) }
                 },
 
                 dismissButton = {
                     TextButton(
                         onClick = { gastoAEliminar = null }
-                    ) { Text("No") }
+                    ) {
+                        Text(
+                            "Cancelar",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             )
         }

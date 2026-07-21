@@ -10,11 +10,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.gestordegastos.domain.model.Categoria
 import com.example.gestordegastos.domain.model.Gasto
 import com.example.gestordegastos.data.repository.GastoRepositoryFirestore
+import com.example.gestordegastos.data.repository.HistorialRepositoryFirestore
 import com.example.gestordegastos.data.repository.PersonaRepositoryFirestore
+import com.example.gestordegastos.domain.model.Historial
 import com.example.gestordegastos.domain.model.Persona
 import com.example.gestordegastos.domain.model.Transferencia
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import java.util.Date
 
 
 sealed class UiEvent {
@@ -25,7 +28,8 @@ sealed class UiEvent {
 class GastoViewModel(
     private val grupo: Grupo,
     private val gastoRepository: GastoRepositoryFirestore,
-    private val personaRepository: PersonaRepositoryFirestore
+    private val personaRepository: PersonaRepositoryFirestore,
+    private val historialRepository: HistorialRepositoryFirestore
 ): ViewModel() {
 
     private val _uiEvent = MutableStateFlow<UiEvent?>(null)
@@ -294,6 +298,59 @@ class GastoViewModel(
 
     fun limpiarUiEvent() {
         _uiEvent.value = null
+    }
+
+    fun liquidarGrupo() {
+
+        viewModelScope.launch {
+
+            if (gastos.value.isEmpty()) return@launch
+
+            val historial = Historial(
+                grupoId = grupoFirestoreId,
+
+                fechaLiquidacion = Date(),
+
+                totalCentavos = gastos.value.sumOf {
+                    it.montoCentavos
+                },
+
+                gastos = gastos.value,
+
+                personas = personas.value,
+
+                transferencias = transferencias.value
+            )
+
+            historialRepository.guardarHistorial(historial)
+
+            gastoRepository.eliminarTodosLosGastos(grupoFirestoreId)
+        }
+    }
+
+    fun cerrarGasto(gasto: Gasto) {
+
+        viewModelScope.launch {
+
+            val deudas = calcularDeudaPorGasto(
+                gasto,
+                personas.value
+            )
+
+            val historial = Historial(
+                grupoId = grupoFirestoreId,
+                fechaLiquidacion = Date(),
+                gastos = listOf(gasto),
+                transferencias = deudas
+            )
+
+            historialRepository.guardarHistorial(historial)
+
+            gastoRepository.eliminarGasto(
+                grupoFirestoreId,
+                gasto.firestoreId
+            )
+        }
     }
 
 }

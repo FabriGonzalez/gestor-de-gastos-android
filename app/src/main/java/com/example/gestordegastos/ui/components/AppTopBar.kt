@@ -26,7 +26,8 @@ fun AppTopBar(
     personasCount: Int? = null,
     codigoGrupo: String? = null,
     onVerPersonas: (() -> Unit)? = null,
-    onSalirGrupo: (() -> Unit)? = null
+    onSalirGrupo: (() -> Unit)? = null,
+    onVerHistorial: (() -> Unit)? = null
 ) {
 
     var showMenu by remember { mutableStateOf(false) }
@@ -107,6 +108,19 @@ fun AppTopBar(
                     onVerPersonas?.let {
                         DropdownMenuItem(
                             text = { Text("Ver personas") },
+                            onClick = {
+                                showMenu = false
+                                it()
+                            }
+                        )
+                    }
+
+                    onVerHistorial?.let {
+
+                        DropdownMenuItem(
+                            text = {
+                                Text("Historial")
+                            },
                             onClick = {
                                 showMenu = false
                                 it()
