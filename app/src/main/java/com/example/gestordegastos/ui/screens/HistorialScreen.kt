@@ -17,6 +17,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.gestordegastos.domain.model.Gasto
 import com.example.gestordegastos.domain.model.Historial
@@ -395,9 +397,6 @@ private fun HistorialCard(
                     fontWeight = FontWeight.Bold
 
                 )
-                Spacer(Modifier.height(8.dp))
-
-                DividerConPunto()
 
                 Spacer(Modifier.height(12.dp))
 
@@ -448,7 +447,8 @@ private fun HistorialCard(
                 historial.gastos.forEach {
 
                     GastoResumenItem(
-                        gasto = it
+                        gasto = it,
+                        personas = historial.personas
                     )
 
                     Spacer(
@@ -471,15 +471,17 @@ private fun TransferenciaItem(
     personas: List<Persona>
 ) {
 
-    val deudor = obtenerNombre(
-        personas,
-        transferencia.deudorId
-    )
+    val deudores = transferencia.deudorId
+        .split(",")
+        .joinToString(", ") { id ->
+            obtenerNombre(personas, id.trim())
+        }
 
-    val acreedor = obtenerNombre(
-        personas,
-        transferencia.acreedorId
-    )
+    val acreedores = transferencia.acreedorId
+        .split(",")
+        .joinToString(", ") { id ->
+            obtenerNombre(personas, id.trim())
+        }
 
     Surface(
 
@@ -487,65 +489,77 @@ private fun TransferenciaItem(
 
         shape = RoundedCornerShape(14.dp),
 
-        color = MaterialTheme.colorScheme.surface.copy(alpha = .55f)
+        color = MaterialTheme.colorScheme.surface,
+
+        tonalElevation = 1.dp
 
     ) {
 
-        Row(
+        Column(
 
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(16.dp),
 
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
 
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+
+                modifier = Modifier.fillMaxWidth(),
+
+                verticalAlignment = Alignment.CenterVertically
+
             ) {
 
                 Text(
 
-                    deudor,
+                    deudores,
 
-                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+
+                    textAlign = TextAlign.End,
 
                     fontWeight = FontWeight.SemiBold
 
                 )
 
+                Spacer(Modifier.width(12.dp))
+
+                Icon(
+
+                    imageVector = Icons.Default.ArrowForward,
+
+                    contentDescription = null,
+
+                    tint = MaterialTheme.colorScheme.secondary
+
+                )
+
+                Spacer(Modifier.width(12.dp))
+
                 Text(
 
-                    acreedor,
+                    acreedores,
 
-                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
 
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    textAlign = TextAlign.Start,
+
+                    fontWeight = FontWeight.SemiBold
 
                 )
 
             }
 
-            Icon(
-
-                imageVector = Icons.Default.ArrowForward,
-
-                contentDescription = null,
-
-                tint = MaterialTheme.colorScheme.primary
-
-            )
-
-            Spacer(
-                Modifier.width(16.dp)
-            )
+            Spacer(Modifier.height(14.dp))
 
             Text(
 
                 "$${formatCentavos(transferencia.montoCentavos)}",
 
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
 
                 fontWeight = FontWeight.Bold,
 
@@ -561,7 +575,8 @@ private fun TransferenciaItem(
 
 @Composable
 private fun GastoResumenItem(
-    gasto: Gasto
+    gasto: Gasto,
+    personas: List<Persona>
 ) {
 
     Surface(
@@ -626,6 +641,12 @@ private fun GastoResumenItem(
 
                 )
 
+                Text(
+                    text = "Pagó: ${obtenerNombre(personas, gasto.paganteId)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
                 gasto.descripcion?.takeIf {
 
                     it.isNotBlank()
@@ -634,7 +655,7 @@ private fun GastoResumenItem(
 
                     Text(
 
-                        it,
+                        text = "Descripción: ${it}",
 
                         style = MaterialTheme.typography.bodySmall,
 
