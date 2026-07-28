@@ -1,143 +1,241 @@
 package com.example.gestordegastos.ui.screens
 
-
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.gestordegastos.domain.model.Gasto
 import com.example.gestordegastos.domain.model.Historial
+import com.example.gestordegastos.domain.model.Persona
+import com.example.gestordegastos.domain.model.Transferencia
+import com.example.gestordegastos.ui.components.DividerConPunto
 import com.example.gestordegastos.utils.formatCentavos
 import com.example.gestordegastos.utils.formatearFechaRelativa
 import com.example.gestordegastos.viewmodel.HistorialViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialScreen(
     viewModel: HistorialViewModel,
     onVolver: () -> Unit,
-    onVerDetalle: (Historial) -> Unit,
     modifier: Modifier = Modifier
-){
+) {
 
     val historial by viewModel.historial.collectAsState()
 
-
     Scaffold(
+
+        modifier = modifier,
+
         containerColor = MaterialTheme.colorScheme.background,
-
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Historial",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
 
-                navigationIcon = {
-                    IconButton(
-                        onClick = onVolver
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
+            Column{
+
+                CenterAlignedTopAppBar(
+
+                    title = {
+
+                        Text(
+                            "Historial",
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                },
+                    },
 
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+
+                    navigationIcon = {
+
+                        IconButton(
+                            onClick = onVolver
+                        ) {
+
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Volver"
+                            )
+
+                        }
+
+                    },
+
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+
                 )
-            )
+
+                Spacer(Modifier.height(8.dp))
+
+                DividerConPunto(
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+            }
         }
+
 
     ) { padding ->
 
-
         if (historial.isEmpty()) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-                Text(
-                    "No hay liquidaciones",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                Text(
-                    "Cuando liquides el grupo aparecerá aquí",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
+            EmptyHistorial(
+                Modifier.padding(padding)
+            )
 
         } else {
 
-
             LazyColumn(
+
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
 
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+
+                verticalArrangement = Arrangement.spacedBy(16.dp)
 
             ) {
 
-                items(historial) { item ->
+                items(historial) { liquidacion ->
 
-
-                    HistorialItem(
-                        historial = item,
-                        onClick = {
-                            onVerDetalle(item)
-                        }
+                    HistorialCard(
+                        historial = liquidacion
                     )
 
                 }
+
             }
+
         }
+
     }
+
 }
 
-
 @Composable
-fun HistorialItem(
-    historial: Historial,
-    onClick: () -> Unit
+private fun EmptyHistorial(
+    modifier: Modifier = Modifier
 ) {
 
-    Surface(
+    Box(
+
+        modifier = modifier.fillMaxSize(),
+
+        contentAlignment = Alignment.Center
+
+    ) {
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Icon(
+
+                imageVector = Icons.Default.Payments,
+
+                contentDescription = null,
+
+                tint = MaterialTheme.colorScheme.primary
+
+            )
+
+            Spacer(
+                Modifier.height(20.dp)
+            )
+
+            Text(
+
+                text = "Todavía no hay\nliquidaciones",
+
+                style = MaterialTheme.typography.headlineSmall,
+
+                fontWeight = FontWeight.Bold
+
+            )
+
+            Spacer(
+                Modifier.height(8.dp)
+            )
+
+            Text(
+
+                text = "Cuando liquides el grupo aparecerán aquí.",
+
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+            )
+
+        }
+
+    }
+
+}
+
+private fun obtenerNombre(
+    personas: List<Persona>,
+    id: String
+): String {
+
+    return personas.firstOrNull {
+        it.id == id
+    }?.nombre ?: "Desconocido"
+
+}
+
+@Composable
+private fun HistorialCard(
+    historial: Historial
+) {
+
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+
+    Card(
 
         modifier = Modifier
             .fillMaxWidth()
-            .clip(
-                RoundedCornerShape(12.dp)
-            ),
+            .animateContentSize()
+            .clickable {
+                expanded = !expanded
+            },
 
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(20.dp),
 
-        onClick = onClick
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .8f)
+        ),
+
+
 
     ) {
 
@@ -145,43 +243,421 @@ fun HistorialItem(
             modifier = Modifier.padding(16.dp)
         ) {
 
+            // HEADER
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Surface(
+
+                    modifier = Modifier.size(50.dp),
+
+                    shape = RoundedCornerShape(14.dp),
+
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
+
+                ) {
+
+                    Icon(
+
+                        imageVector = Icons.Default.Payments,
+
+                        contentDescription = null,
+
+                        tint = MaterialTheme.colorScheme.secondary,
+
+                        modifier = Modifier.padding(11.dp)
+
+                    )
+
+                }
+
+                Spacer(
+                    Modifier.width(16.dp)
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    Text(
+
+                        "Liquidación",
+
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+
+                        fontWeight = FontWeight.Bold
+
+                    )
+
+                    Text(
+
+                        formatearFechaRelativa(
+                            historial.fechaLiquidacion
+                        ),
+
+                        style = MaterialTheme.typography.bodySmall,
+
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    )
+
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+
+                    Text(
+                        "$${formatCentavos(historial.totalCentavos)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                }
+
+            }
+
+            Spacer(
+                Modifier.height(18.dp)
+            )
+
+            Row {
+
+                AssistChip(
+                    enabled = true,
+                    onClick = {},
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = .12f),
+                        labelColor = MaterialTheme.colorScheme.onSurface,
+                        leadingIconContentColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    label = {
+                        Text(
+                            if (historial.gastos.size == 1) {
+                                "1 gasto"
+                            } else {
+                                "${historial.gastos.size} gastos"
+                            }
+                        )                    }
+                )
+
+                Spacer(
+                    Modifier.width(8.dp)
+                )
+
+                AssistChip(
+                    enabled = true,
+                    onClick = {},
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = .12f),
+                        labelColor = MaterialTheme.colorScheme.onSurface,
+                        leadingIconContentColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    label = {
+                        Text(
+                            if (historial.transferencias.size == 1) {
+                                "1 transferencia"
+                            } else {
+                                "${historial.transferencias.size} gastos"
+                            }
+                        )
+                    }
+                )
+
+            }
+
+            if (expanded) {
+
+                Spacer(
+                    Modifier.height(20.dp)
+                )
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = .5f)
+                )
+
+                Spacer(
+                    Modifier.height(18.dp)
+                )
+
+                Text(
+
+                    "TRANSFERENCIAS",
+
+                    style = MaterialTheme.typography.labelLarge,
+
+                    color = MaterialTheme.colorScheme.primary,
+
+                    fontWeight = FontWeight.Bold
+
+                )
+                Spacer(Modifier.height(8.dp))
+
+                DividerConPunto()
+
+                Spacer(Modifier.height(12.dp))
+
+                historial.transferencias.forEach {
+
+                    TransferenciaItem(
+
+                        transferencia = it,
+
+                        personas = historial.personas
+
+                    )
+
+                    Spacer(
+                        Modifier.height(10.dp)
+                    )
+
+                }
+
+                Spacer(
+                    Modifier.height(8.dp)
+                )
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = .5f)
+                )
+
+                Spacer(
+                    Modifier.height(18.dp)
+                )
+
+                Text(
+
+                    "GASTOS",
+
+                    style = MaterialTheme.typography.labelLarge,
+
+                    color = MaterialTheme.colorScheme.tertiary,
+
+                    fontWeight = FontWeight.Bold
+
+                )
+
+                Spacer(
+                    Modifier.height(12.dp)
+                )
+
+                historial.gastos.forEach {
+
+                    GastoResumenItem(
+                        gasto = it
+                    )
+
+                    Spacer(
+                        Modifier.height(10.dp)
+                    )
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+@Composable
+private fun TransferenciaItem(
+    transferencia: Transferencia,
+    personas: List<Persona>
+) {
+
+    val deudor = obtenerNombre(
+        personas,
+        transferencia.deudorId
+    )
+
+    val acreedor = obtenerNombre(
+        personas,
+        transferencia.acreedorId
+    )
+
+    Surface(
+
+        modifier = Modifier.fillMaxWidth(),
+
+        shape = RoundedCornerShape(14.dp),
+
+        color = MaterialTheme.colorScheme.surface.copy(alpha = .55f)
+
+    ) {
+
+        Row(
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+
+                    deudor,
+
+                    style = MaterialTheme.typography.bodyMedium,
+
+                    fontWeight = FontWeight.SemiBold
+
+                )
+
+                Text(
+
+                    acreedor,
+
+                    style = MaterialTheme.typography.bodySmall,
+
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                )
+
+            }
+
+            Icon(
+
+                imageVector = Icons.Default.ArrowForward,
+
+                contentDescription = null,
+
+                tint = MaterialTheme.colorScheme.primary
+
+            )
+
+            Spacer(
+                Modifier.width(16.dp)
+            )
 
             Text(
-                text = "Liquidación",
+
+                "$${formatCentavos(transferencia.montoCentavos)}",
+
+                style = MaterialTheme.typography.titleMedium,
+
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
-            )
 
+                color = MaterialTheme.colorScheme.primary
 
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
-
-
-            Text(
-                text = formatearFechaRelativa(
-                    historial.fechaLiquidacion
-                ),
-
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-
-            Text(
-                text = "Gastos: ${historial.gastos.size}"
-            )
-
-
-            Text(
-                text = "Total: $${formatCentavos(historial.totalCentavos)}",
-                fontWeight = FontWeight.Bold
             )
 
         }
+
     }
+
+}
+
+@Composable
+private fun GastoResumenItem(
+    gasto: Gasto
+) {
+
+    Surface(
+
+        modifier = Modifier.fillMaxWidth(),
+
+        shape = RoundedCornerShape(14.dp),
+
+        color = gasto.categoria.color.copy(alpha = .08f)
+
+    ) {
+
+        Row(
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+
+            verticalAlignment = Alignment.CenterVertically
+
+        ) {
+
+            Surface(
+
+                modifier = Modifier.size(42.dp),
+
+                shape = RoundedCornerShape(12.dp),
+
+                color = gasto.categoria.color.copy(alpha = .18f)
+
+            ) {
+
+                Icon(
+
+                    imageVector = gasto.categoria.icono,
+
+                    contentDescription = null,
+
+                    tint = gasto.categoria.color,
+
+                    modifier = Modifier.padding(9.dp)
+
+                )
+
+            }
+
+            Spacer(
+                Modifier.width(14.dp)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+
+                    gasto.categoria.name
+                        .lowercase()
+                        .replaceFirstChar { it.uppercase() },
+
+                    fontWeight = FontWeight.Bold
+
+                )
+
+                gasto.descripcion?.takeIf {
+
+                    it.isNotBlank()
+
+                }?.let {
+
+                    Text(
+
+                        it,
+
+                        style = MaterialTheme.typography.bodySmall,
+
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+
+                    )
+
+                }
+
+            }
+
+            Text(
+
+                "$${formatCentavos(gasto.montoCentavos)}",
+
+                style = MaterialTheme.typography.titleSmall,
+
+                fontWeight = FontWeight.Bold
+
+            )
+
+        }
+
+    }
+
 }

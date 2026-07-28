@@ -341,6 +341,8 @@ class GastoViewModel(
                 grupoId = grupoFirestoreId,
                 fechaLiquidacion = Date(),
                 gastos = listOf(gasto),
+                totalCentavos = gasto.montoCentavos,
+                personas = personas.value,
                 transferencias = deudas
             )
 

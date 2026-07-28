@@ -124,9 +124,6 @@ fun ContenedorPrincipal(
                     onVolver = {
                         pantallaActual = PantallaNavegacion.GASTOS
                     },
-                    onVerDetalle = {
-                        // después implementamos el detalle
-                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
