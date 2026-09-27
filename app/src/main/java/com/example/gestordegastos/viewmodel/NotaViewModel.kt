@@ -32,12 +32,45 @@ class NotaViewModel(
 
     val codigoGrupo = grupo.codigoGrupo
 
+    // NUEVO: estado para el pull-to-refresh
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
+            // NUEVO: primero traemos una foto fresca del servidor,
+            // así evitamos arrancar mostrando datos viejos de la cache local
+            try {
+                refrescarSync()
+            } catch (e: Exception) {
+                _uiEvent.value = NotasUiEvent.Error("No se pudieron cargar las notas más recientes")
+            }
+
+            // Recién ahora nos suscribimos al listener en tiempo real
             notaRepository
                 .obtenerNotasDelGrupo(grupoFirestoreId)
                 .collect { _notas.value = it }
         }
+    }
+
+    // NUEVO: para el pull-to-refresh de la pantalla de notas
+    fun refrescar() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                refrescarSync()
+            } catch (e: Exception) {
+                _uiEvent.value = NotasUiEvent.Error("No se pudo actualizar. Revisá tu conexión.")
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    // NUEVO: lectura forzada al servidor, sin depender de la cache local
+    private suspend fun refrescarSync() {
+        val notasFrescas = notaRepository.refrescarNotasDesdeServidor(grupoFirestoreId)
+        _notas.value = notasFrescas
     }
 
     fun agregarNota(titulo: String, contenido: String) {
@@ -110,4 +143,3 @@ class NotaViewModel(
         _uiEvent.value = null
     }
 }
-

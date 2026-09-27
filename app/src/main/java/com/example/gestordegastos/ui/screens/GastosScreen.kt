@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.example.gestordegastos.domain.model.Gasto
 import com.example.gestordegastos.ui.components.DividerConPunto
 import androidx.compose.runtime.Composable
@@ -78,6 +79,7 @@ fun MainScreen(
     val personas by viewModel.personas.collectAsState()
     val transferencias by viewModel.transferencias.collectAsState()
     val uiEvent by viewModel.uiEvent.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     var showAgregarPersonaDialog by remember { mutableStateOf(false) }
     var showDialogAgregarGasto by remember { mutableStateOf(false) }
@@ -174,77 +176,84 @@ fun MainScreen(
 
         ) { padding ->
 
-            Column(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refrescar() },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 16.dp)
             ) {
-
-                Spacer(Modifier.height(16.dp))
-                DividerConPunto()
-                Spacer(Modifier.height(16.dp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
                 ) {
 
-                    Row(
-                        modifier = Modifier.padding(24.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Spacer(Modifier.height(16.dp))
+                    DividerConPunto()
+                    Spacer(Modifier.height(16.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
                     ) {
 
-                        Column {
-                            Text(
-                                "Total del grupo",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        Row(
+                            modifier = Modifier.padding(24.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
 
-                            Text(
-                                "$${formatCentavos(gastos.sumOf { it.montoCentavos }, Locale.getDefault())}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Column {
+                                Text(
+                                    "Total del grupo",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Text(
+                                    "$${formatCentavos(gastos.sumOf { it.montoCentavos }, Locale.getDefault())}",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
-                }
 
-                Spacer(Modifier.height(16.dp))
-                if (gastos.isEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    if (gastos.isEmpty()) {
 
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No hay gastos cargados",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                } else {
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 100.dp)
-                    ) {
-
-                        items(gastos) { gasto ->
-                            GastoItem(
-                                gasto = gasto,
-                                onMarcarPagado = { gastoAPagar = gasto },
-                                onEliminar = { gastoAEliminar = gasto },
-                                viewModel = viewModel,
-                                personas = personas,
-                                onAgregarPersona = { showAgregarPersonaDialog = true }
+                        Box(
+                            Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No hay gastos cargados",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+
+                    } else {
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = 100.dp)
+                        ) {
+
+                            items(gastos) { gasto ->
+                                GastoItem(
+                                    gasto = gasto,
+                                    onMarcarPagado = { gastoAPagar = gasto },
+                                    onEliminar = { gastoAEliminar = gasto },
+                                    viewModel = viewModel,
+                                    personas = personas,
+                                    onAgregarPersona = { showAgregarPersonaDialog = true }
+                                )
+                            }
                         }
                     }
                 }
@@ -409,10 +418,10 @@ fun MainScreen(
                             gastoAPagar = null
                         }
                     ) { Text(
-                            "Sí",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
+                        "Sí",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                     }
                 },
 
@@ -420,8 +429,8 @@ fun MainScreen(
                     TextButton(
                         onClick = { gastoAPagar = null }
                     ) { Text(
-                            "No",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "No",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     ) }
                 }
             )
@@ -453,9 +462,9 @@ fun MainScreen(
                             gastoAEliminar = null
                         }
                     ) { Text(
-                            "Sí",
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
+                        "Sí",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
                     ) }
                 },
 
@@ -573,15 +582,6 @@ fun GastoItem(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                if (personas.size == 2) {
-                    val etiqueta = if (gasto.porcentaje == 1.0) "Prestamo" else "Gasto compartido"
-                    Text(
-                        text = etiqueta,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
 
                 if (deudasPorGasto.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -898,45 +898,20 @@ fun AgregarGastoDialog(
                     }
                 }
 
-                if (personas.size == 2) {
-                    Spacer(Modifier.height(16.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-
-                        FilterChip(
-                            selected = porcentaje == 0.5,
-                            onClick = { porcentaje = 0.5 },
-                            label = { Text("Compartido") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = cs.primary,
-                                selectedLabelColor = cs.onPrimary
-                            )
-                        )
-
-                        FilterChip(
-                            selected = porcentaje == 1.0,
-                            onClick = { porcentaje = 1.0 },
-                            label = { Text("Préstamo") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = cs.primary,
-                                selectedLabelColor = cs.onPrimary
-                            )
-                        )
-                    }
-                }
-
                 Spacer(Modifier.height(16.dp))
 
                 Button(
                     onClick = {
                         val monto = montoCentavos
+                        val porcentajeFinal =
+                            if (categoria == Categoria.PRESTAMO) 1.0 else 0.5
                         if (monto != null && monto > 0 && pagante != null) {
                             onGuardar(
                                 categoria,
                                 descripcion.ifBlank { null },
                                 monto,
                                 pagante!!,
-                                porcentaje,
+                                porcentajeFinal,
                                 deudoresSeleccionados.toList()
                             )
                             onDismiss()
@@ -995,6 +970,14 @@ fun EditarGastoDialog(
                 personas.filter { it.id != gasto.paganteId }.map { it.id }.toSet()
             }
         )
+    }
+
+    val categorias = remember(personas.size) {
+        if (personas.size == 2) {
+            Categoria.entries
+        } else {
+            Categoria.entries.filter { it != Categoria.PRESTAMO }
+        }
     }
 
     val montoCentavos = remember(montoTexto) { parseMonedaToCentavos(montoTexto) }
@@ -1080,7 +1063,7 @@ fun EditarGastoDialog(
                 Spacer(Modifier.height(12.dp))
 
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    items(Categoria.entries) { cat ->
+                    items(categorias) { cat ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.clickable { categoria = cat }
@@ -1217,38 +1200,13 @@ fun EditarGastoDialog(
                     }
                 }
 
-                if (personas.size == 2) {
-                    Spacer(Modifier.height(16.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-
-                        FilterChip(
-                            selected = porcentaje == 0.5,
-                            onClick = { porcentaje = 0.5 },
-                            label = { Text("Compartido") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = cs.primary,
-                                selectedLabelColor = cs.onPrimary
-                            )
-                        )
-
-                        FilterChip(
-                            selected = porcentaje == 1.0,
-                            onClick = { porcentaje = 1.0 },
-                            label = { Text("Préstamo") },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = cs.primary,
-                                selectedLabelColor = cs.onPrimary
-                            )
-                        )
-                    }
-                }
-
                 Spacer(Modifier.height(32.dp))
 
                 Button(
                     onClick = {
                         val monto = montoCentavos
+                        val porcentajeFinal =
+                            if (categoria == Categoria.PRESTAMO) 1.0 else 0.5
                         if (monto != null && monto > 0 && pagante != null) {
                             viewModel.editarGasto(
                                 gasto,
@@ -1256,7 +1214,7 @@ fun EditarGastoDialog(
                                 descripcion.ifBlank { null },
                                 monto,
                                 pagante!!,
-                                porcentaje,
+                                porcentajeFinal,
                                 deudoresSeleccionados.toList()
                             )
                             onDismiss()
@@ -1326,8 +1284,8 @@ fun PaganteDropdown(
         Surface(
             modifier = Modifier
                 .menuAnchor(
-                type = MenuAnchorType.PrimaryNotEditable,
-                enabled = true)
+                    type = MenuAnchorType.PrimaryNotEditable,
+                    enabled = true)
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(28.dp),

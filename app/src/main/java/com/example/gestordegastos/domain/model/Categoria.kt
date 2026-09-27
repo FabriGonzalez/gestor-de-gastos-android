@@ -12,7 +12,7 @@ enum class Categoria(
 ) {
     SUPERMERCADO(
         icono = Icons.Outlined.ShoppingCart,
-        color = Color(0xFF2ED573)
+        color = Color(0xFF3CD02B)
     ),
     COMIDA(
         icono = Icons.Outlined.Restaurant,
@@ -38,6 +38,10 @@ enum class Categoria(
         icono = Icons.Outlined.BakeryDining,
         color = Color(0xFFFFA502)
     ),
+    PRESTAMO(
+        icono = Icons.Outlined.Payments,
+        color = Color(0xFFBAE323)
+    ),
     TRANSPORTE(
         icono = Icons.Outlined.DirectionsCar,
         color = Color(0xFF3742FA)
@@ -57,6 +61,7 @@ enum class Categoria(
     OTROS(
         icono = Icons.Outlined.ReceiptLong,
         color = Color(0xFFE0E2E3)
-    )
+    ),
+
 }
 

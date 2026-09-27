@@ -1,6 +1,5 @@
 package com.example.gestordegastos.viewmodel
 
-
 import Grupo
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,11 +18,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import java.util.Date
 
-
 sealed class UiEvent {
     data class Error(val message: String) : UiEvent()
 }
-
 
 class GastoViewModel(
     private val grupo: Grupo,
@@ -48,26 +45,63 @@ class GastoViewModel(
     private val _transferencias = MutableStateFlow<List<Transferencia>>(emptyList())
     val transferencias: StateFlow<List<Transferencia>> = _transferencias.asStateFlow()
 
+    // Estado para el pull-to-refresh
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         viewModelScope.launch {
-            gastoRepository
-                .obtenerGastosDelGrupo(grupoFirestoreId)
-                .collect { _gastos.value = it }
-        }
+            // Antes de suscribirnos al listener en tiempo real, forzamos
+            // una lectura al servidor para no arrancar con datos viejos de la cache
+            try {
+                refrescarSync()
+            } catch (e: Exception) {
+                _uiEvent.value = UiEvent.Error("No se pudo cargar la info más reciente")
+            }
 
-        viewModelScope.launch {
-            personaRepository
-                .obtenerPersonasDelGrupo(grupoFirestoreId)
-                .collect { _personas.value = it }
-        }
+            launch {
+                gastoRepository
+                    .obtenerGastosDelGrupo(grupoFirestoreId)
+                    .collect { _gastos.value = it }
+            }
 
-        viewModelScope.launch {
-            combine(_gastos, _personas) { gastos, personas ->
-                calcularTransferencias(gastos, personas)
-            }.collect { resultado ->
-                _transferencias.value = resultado
+            launch {
+                personaRepository
+                    .obtenerPersonasDelGrupo(grupoFirestoreId)
+                    .collect { _personas.value = it }
+            }
+
+            launch {
+                combine(_gastos, _personas) { gastos, personas ->
+                    calcularTransferencias(gastos, personas)
+                }.collect { resultado ->
+                    _transferencias.value = resultado
+                }
             }
         }
+    }
+
+    // Llamado desde el pull-to-refresh de la pantalla
+    fun refrescar() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                refrescarSync()
+            } catch (e: Exception) {
+                _uiEvent.value = UiEvent.Error("No se pudo actualizar. Revisá tu conexión.")
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    // Lectura forzada al servidor, sin depender de la cache local
+    private suspend fun refrescarSync() {
+        val gastosFrescos = gastoRepository.refrescarGastosDesdeServidor(grupoFirestoreId)
+        _gastos.value = gastosFrescos
+
+        val personasFrescas = personaRepository.refrescarPersonasDesdeServidor(grupoFirestoreId)
+        _personas.value = personasFrescas
     }
 
     fun agregarGasto(
@@ -89,7 +123,6 @@ class GastoViewModel(
             deudoresIds = deudoresIds
         )
 
-
         viewModelScope.launch {
             gastoRepository.insertarGasto(gasto)
         }
@@ -104,7 +137,6 @@ class GastoViewModel(
             personaRepository.insertarPersona(nuevaPersona)
         }
     }
-
 
     fun eliminarGasto(id: String) {
         viewModelScope.launch {
@@ -203,7 +235,6 @@ class GastoViewModel(
                     } else {
                         divideHalfUp(gasto.montoCentavos, personas.size)
                     }
-
                 }
 
                 deudoresDelGasto.forEach { persona ->
@@ -240,12 +271,12 @@ class GastoViewModel(
 
                 deudaRestante -= monto
 
-                acreedores[acreedorId] = credito - monto            }
+                acreedores[acreedorId] = credito - monto
+            }
         }
 
         return transferencias
     }
-
 
     fun calcularDeudaPorGasto(
         gasto: Gasto,
@@ -301,41 +332,26 @@ class GastoViewModel(
     }
 
     fun liquidarGrupo() {
-
         viewModelScope.launch {
-
             if (gastos.value.isEmpty()) return@launch
 
             val historial = Historial(
                 grupoId = grupoFirestoreId,
-
                 fechaLiquidacion = Date(),
-
-                totalCentavos = gastos.value.sumOf {
-                    it.montoCentavos
-                },
-
+                totalCentavos = gastos.value.sumOf { it.montoCentavos },
                 gastos = gastos.value,
-
                 personas = personas.value,
-
                 transferencias = transferencias.value
             )
 
             historialRepository.guardarHistorial(historial)
-
             gastoRepository.eliminarTodosLosGastos(grupoFirestoreId)
         }
     }
 
     fun cerrarGasto(gasto: Gasto) {
-
         viewModelScope.launch {
-
-            val deudas = calcularDeudaPorGasto(
-                gasto,
-                personas.value
-            )
+            val deudas = calcularDeudaPorGasto(gasto, personas.value)
 
             val historial = Historial(
                 grupoId = grupoFirestoreId,
@@ -347,12 +363,7 @@ class GastoViewModel(
             )
 
             historialRepository.guardarHistorial(historial)
-
-            gastoRepository.eliminarGasto(
-                grupoFirestoreId,
-                gasto.firestoreId
-            )
+            gastoRepository.eliminarGasto(grupoFirestoreId, gasto.firestoreId)
         }
     }
-
 }

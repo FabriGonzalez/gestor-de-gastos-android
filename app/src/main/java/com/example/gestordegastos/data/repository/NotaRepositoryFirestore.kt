@@ -1,6 +1,8 @@
 package com.example.gestordegastos.data.repository
 
 import com.example.gestordegastos.domain.model.Nota
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
@@ -34,6 +36,19 @@ class NotaRepositoryFirestore {
                 trySend(notas)
             }
         awaitClose { listener.remove() }
+    }
+
+    suspend fun refrescarNotasDesdeServidor(grupoId: String): List<Nota> {
+        val snapshot = db.collection("grupos")
+            .document(grupoId)
+            .collection("notas")
+            .orderBy("fechaCreacion", Query.Direction.DESCENDING)
+            .get(Source.SERVER)
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Nota::class.java)?.copy(firestoreId = doc.id)
+        }
     }
 
     suspend fun eliminarNota(grupoId: String, notaId: String) {

@@ -1,6 +1,7 @@
 package com.example.gestordegastos.data.repository
 
 import com.example.gestordegastos.domain.model.Persona
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
@@ -32,6 +33,18 @@ class PersonaRepositoryFirestore {
         }
 
         awaitClose { listener.remove() }
+    }
+
+    suspend fun refrescarPersonasDesdeServidor(grupoId: String): List<Persona> {
+        val snapshot = db.collection("grupos")
+            .document(grupoId)
+            .collection("personas")
+            .get(Source.SERVER)
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Persona::class.java)?.copy(id = doc.id)
+        }
     }
 
     suspend fun insertarPersona(persona: Persona) {

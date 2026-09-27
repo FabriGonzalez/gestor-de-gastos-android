@@ -3,6 +3,7 @@ package com.example.gestordegastos.data.repository
 import com.example.gestordegastos.domain.model.Gasto
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
@@ -46,6 +47,18 @@ class GastoRepositoryFirestore {
 
         awaitClose { listener.remove() }
     }
+
+    suspend fun refrescarGastosDesdeServidor(grupoId: String): List<Gasto> {
+        val snapshot = db.collection("grupos")
+            .document(grupoId)
+            .collection("gastos")
+            .orderBy("fecha", Query.Direction.DESCENDING)
+            .get(Source.SERVER)
+            .await()
+
+        return snapshot.documents.mapNotNull { doc -> doc.toGastoCompat() }
+    }
+
     suspend fun eliminarGasto(grupoId: String, gastoId: String) {
         db.collection("grupos")
             .document(grupoId)
